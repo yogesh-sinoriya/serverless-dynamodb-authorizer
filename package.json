@@ -1,0 +1,27 @@
+{
+  "name": "serverless-dynamodb-local-authorizer-rest-api",
+  "version": "1.0.0",
+  "description": "Serverless offline REST API with Authorizer & DynamoDB",
+  "author": "yogeshsinoriya <yogeshsinoriya@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "sls offline start",
+    "postinstall": "sls dynamodb install"
+  },
+  "dependencies": {
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.503.0",
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-offline": "^5.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yogesh-sinoriya/serverless-dynamodb-local-authorizer-rest-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yogesh-sinoriya/serverless-dynamodb-local-authorizer-rest-api/issues"
+  },
+  "homepage": "https://github.com/yogesh-sinoriya/serverless-dynamodb-local-authorizer-rest-api#readme"
+}

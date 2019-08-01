@@ -1,0 +1,111 @@
+service: serverless-dynamodb-local-authorizer-rest-api
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      migrate: true
+    migration:
+      dir: migrations
+  authorizer:
+    auth:
+      name: genAuth
+      type: TOKEN
+      identitySource: method.request.header.Authorization
+      identityValidationExpression: Bearer (.*)
+
+provider:
+  name: aws
+  region: localhost
+  runtime: nodejs8.11.3
+  stage: dev
+  environment:
+    AWS_SECRET_ACCESS_KEY: "local"
+    AWS_ACCESS_KEY_ID: "local"
+    DYNAMODB_TABLE: "todos"
+    DYNAMODB_REGION: "localhost"
+    DYNAMODB_ENDPOINT: "http://localhost:8000"
+    AUTH0_CLIENT_ID: yogesh-sinoriya
+    AUTH0_CLIENT_PUBLIC_KEY: yogesh-sinoriya-auth-public-key
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  genAuth:
+    handler: lambda/auth.handle
+
+  create:
+    handler: lambda/create.handle
+    events:
+      - http:
+          path: todos
+          method: post
+          authorizer: ${self:custom.authorizer.auth}
+          cors: true
+
+  find:
+    handler: lambda/find.handle
+    events:
+      - http:
+          path: todos
+          method: get
+          authorizer: ${self:custom.authorizer.auth}
+          cors: true
+
+  findOne:
+    handler: lambda/findOne.handle
+    events:
+      - http:
+          path: todos/{id}
+          method: get
+          authorizer: ${self:custom.authorizer.auth}
+          cors: true
+
+  update:
+    handler: lambda/update.handle
+    events:
+      - http:
+          path: todos/{id}
+          method: put
+          authorizer: ${self:custom.authorizer.auth}
+          cors: true
+
+  delete:
+    handler: lambda/delete.handle
+    events:
+      - http:
+          path: todos/{id}
+          method: delete
+          authorizer: ${self:custom.authorizer.auth}
+          cors: true
+
+resources:
+  Resources:
+    DynamoDbTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
